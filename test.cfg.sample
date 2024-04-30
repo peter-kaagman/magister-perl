@@ -1,0 +1,4 @@
+MagSite https://<schoolcode>.swp.nl:8800/doc
+MagUser <USER>
+MagSecret <PASS>
+MagLesPeriode 2324

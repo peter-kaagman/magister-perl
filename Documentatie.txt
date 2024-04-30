@@ -1,0 +1,58 @@
+ADFuncties.GetActiveEmpoyees
+Test
+Parameters:
+In SessionToken (String)	
+Out Data (TTable)	
+Out Result (Boolean)	
+C# Syntax:
+public Boolean ADFuncties.GetActiveEmpoyees(String SessionToken, out TTable Data);
+Delphi Syntax:
+function ADFuncties.GetActiveEmpoyees(const SessionToken: String; out Data: TTable): Boolean;
+URL Syntax:
+https://[url]/?library=ADFuncties&function=GetActiveEmpoyees&SessionToken=[SessionToken] &Type=[HTML/XML/CSV/TAB]
+
+
+ADFuncties.GetActiveStudents
+Test
+Parameters:
+In SessionToken (String)	
+In LesPeriode (String)	
+Out Data (TTable)	
+Out Result (Boolean)	
+C# Syntax:
+public Boolean ADFuncties.GetActiveStudents(String SessionToken, String LesPeriode, out TTable Data);
+Delphi Syntax:
+function ADFuncties.GetActiveStudents(const SessionToken: String; const LesPeriode: String; out Data: TTable): Boolean;
+URL Syntax:
+https://[url]/?library=ADFuncties&function=GetActiveStudents&SessionToken=[SessionToken]&LesPeriode=[LesPeriode] &Type=[HTML/XML/CSV/TAB]
+
+
+<BS>ADFuncties.GetPersoneelGroepVakken
+Test
+Parameters:
+In SessionToken (String)	
+In LesPeriode (String)	
+In StamNr (Integer)	
+Out Data (TTable)	
+Out Result (Boolean)	
+C# Syntax:
+public Boolean ADFuncties.GetPersoneelGroepVakken(String SessionToken, String LesPeriode, Int32 StamNr, out TTable Data);
+Delphi Syntax:
+function ADFuncties.GetPersoneelGroepVakken(const SessionToken: String; const LesPeriode: String; const StamNr: Integer; out Data: TTable): Boolean;
+URL Syntax:
+https://[url]/?library=ADFuncties&function=GetPersoneelGroepVakken&SessionToken=[SessionToken]&LesPeriode=[LesPeriode]&StamNr=[StamNr] &Type=[HTML/XML/CSV/TAB]
+
+ADFuncties.GetLeerlingGroepen
+Test
+Parameters:
+In SessionToken (String)	
+In LesPeriode (String)	
+In StamNr (Integer)	
+Out Data (TTable)	
+Out Result (Boolean)	
+C# Syntax:
+public Boolean ADFuncties.GetLeerlingGroepen(String SessionToken, String LesPeriode, Int32 StamNr, out TTable Data);
+Delphi Syntax:
+function ADFuncties.GetLeerlingGroepen(const SessionToken: String; const LesPeriode: String; const StamNr: Integer; out Data: TTable): Boolean;
+URL Syntax:
+https://[url]/?library=ADFuncties&function=GetLeerlingGroepen&SessionToken=[SessionToken]&LesPeriode=[LesPeriode]&StamNr=[StamNr] &Type=[HTML/XML/CSV/TAB]
