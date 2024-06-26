@@ -68,6 +68,7 @@ sub BUILD{ #	{{{1
 	);
 
 	my $result = $ua->request($r);
+	#print Dumper $result;
 	if ($result->is_success){
 		if ($result->content =~ /.+SessionToken">(.+)<\/td>.+/) {
 			$self->_set_access_token($1);
@@ -98,31 +99,44 @@ sub callAPI { # {{{1
 	return $result;
 } # }}}
 
-#https://[url]/?library=ADFuncties&function=GetActiveEmpoyees&SessionToken=[SessionToken] &Type=[HTML/XML/CSV/TAB]
+#https://[url]/?library=ADFuncties&function=GetActiveEmpoyees&SessionToken=[SessionToken] &Type=[HTML/XML/CSV/TAB] <= niet langer in gebruik
+#
+# GetActiveEmpoyees (staat daar nu echt een tikfout in?) is niet geschikt voor het ophalen van docenten. Hierin ontbreekt informatie om een koppeling met Azure te kunnen maken.
+# In plaats daarvan wordt gebruik gemaakt van een query "SDS-Medewerker". Hierin staat het werk email adres wat gebruikt kan worden als UPN.
+#
+#https://[url]/?library=Data&function=GetData&SessionToken=[SessionToken]&Layout=[Layout]&Parameters=[Parameters] &Type=[HTML/XML/CSV/TAB]
 sub getDocenten {
 	my $self = shift;
 	my $url = $self->_get_endpoint;
-	$url .= "/?library=ADFuncties&function=GetActiveEmpoyees&Type=CSV&SessionToken=".$self->_get_access_token;
+	#$url .= "/?library=ADFuncties&function=GetActiveEmpoyees&Type=CSV&SessionToken=".$self->_get_access_token;
+	$url .= "/?library=Data&function=GetData&Layout=SDS-Medewerker&Type=CSV&SessionToken=".$self->_get_access_token;
 	my $result = callAPI($url);
-	my $docenten = csv(
-		in => \$result->content,
-		headers => "auto",
-		sep_char => ";",
-		encoding => "UTF-8"
-	);
-	my $reply;
-	foreach my $docent (@$docenten){
-		#print Dumper $docent;
-		$reply->{$docent->{"\x{feff}stamnr_str"}}->{'naam'} 		= $docent->{'Loginaccount.Volledige_naam'};
-		$reply->{$docent->{"\x{feff}stamnr_str"}}->{'inlogcode'} 	= lc($docent->{'Code'});
-		$reply->{$docent->{"\x{feff}stamnr_str"}}->{'locatie'}		= $docent->{'Administratieve_eenheid.Omschrijving'};
-		$reply->{$docent->{"\x{feff}stamnr_str"}}->{'rol'} 			= $docent->{'Functie.Omschr'};
-	};	
-	return $reply;
+	if ($result->is_success){
+		my $docenten = csv(
+			in => \$result->content,
+			headers => "auto",
+			sep_char => ";",
+			encoding => "UTF-8"
+		);
+		my $reply;
+		foreach my $docent (@$docenten){
+			#print Dumper $docent;
+			#13 hash omgeboud naar index op upn
+			# Uit dienst wordt aangegeven door een sterrje voor de 3-letter code
+			# Email_werk zou de UPN moeten zijn
+			my $upn = lc($docent->{'Email_werk'});
+			$reply->{$upn}->{'naam'}	= $docent->{'Volledige_naam'};
+			$reply->{$upn}->{'stamnr'}	= $docent->{"\x{feff}Stamnr"};
+		};	
+		return $reply;
+	}else{
+		print Dumper $result;
+	}
 }
 
 #https://[url]/?library=ADFuncties&function=GetActiveStudents&SessionToken=[SessionToken]&LesPeriode=[LesPeriode] &Type=[HTML/XML/CSV/TAB]
-sub getLLN {
+#ToDo Hier wordt het koppelveld gemaakt tussen Magister en Azure, deze met de tijd configureerbaar maken
+sub getLeerlingen {
 	my $self = shift;
 	my $url = $self->_get_endpoint;
 	$url .= "/?library=ADFuncties&function=GetActiveStudents&Type=CSV&SessionToken=".$self->_get_access_token;
@@ -137,11 +151,17 @@ sub getLLN {
 	my $reply;
 	foreach my $lln (@$leerlingen){
 		#print Dumper $lln;
-		$reply->{$lln->{"\x{feff}stamnr_str"}}->{'naam'} 		= $lln->{'Volledige_naam'};
-		$reply->{$lln->{"\x{feff}stamnr_str"}}->{'klas'} 		= $lln->{'Klas'};
-		$reply->{$lln->{"\x{feff}stamnr_str"}}->{'studie'} 	= $lln->{'Studie'};
-		$reply->{$lln->{"\x{feff}stamnr_str"}}->{'b_nummer'} 	= lc($lln->{'Loginaccount.Naam'});
-		$reply->{$lln->{"\x{feff}stamnr_str"}}->{'loatie'} 	= $lln->{'Administratieve_eenheid.Omschrijving'};
+		# Fabriceer een UPN, deze kan best ongeldig zijn.
+		my $upn = lc($lln->{'Loginaccount.Naam'}).'@atlascollege.nl';
+		$reply->{$upn}->{'naam'}	= $lln->{'Volledige_naam'};
+		$reply->{$upn}->{'studie'}	= $lln->{'Studie'};
+		$reply->{$upn}->{'stamnr'}	= $lln->{"\x{feff}stamnr_str"};
+		$reply->{$upn}->{'klas'}	= $lln->{'Klas'};
+		# Rest van de data wordt nergens gebruikt
+		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'naam'} 		= $lln->{'Volledige_naam'};
+		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'studie'} 	= $lln->{'Studie'};
+		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'b_nummer'} 	= lc($lln->{'Loginaccount.Naam'});
+		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'locatie'} 	= $lln->{'Administratieve_eenheid.Omschrijving'};
 		# $reply->{$docent->{"\x{feff}stamnr_str"}}->{'inlogcode'} 	= lc($docent->{'Code'});
 		# $reply->{$docent->{"\x{feff}stamnr_str"}}->{'locatie'}		= $docent->{'Administratieve_eenheid.Omschrijving'};
 		# $reply->{$docent->{"\x{feff}stamnr_str"}}->{'rol'} 			= $docent->{'Functie.Omschr'};
@@ -151,6 +171,7 @@ sub getLLN {
 
 #https://[url]/?library=ADFuncties&function=GetPersoneelGroepVakken&SessionToken=[SessionToken]&LesPeriode=[LesPeriode]&StamNr=[StamNr] &Type=[HTML/XML/CSV/TAB]
 #https://[url]/?library=ADFuncties&function=GetLeerlingGroepen&SessionToken=[SessionToken]&LesPeriode=[LesPeriode]&StamNr=[StamNr] &Type=[HTML/XML/CSV/TAB]
+#https://[url]/?library=ADFuncties&function=GetLeerlingVakken&SessionToken=[SessionToken]&LesPeriode=[LesPeriode]&StamNr=[StamNr] &Type=[HTML/XML/CSV/TAB]
 sub getRooster{
 	my $self = shift;
 	my $stamnr = shift;
@@ -171,14 +192,17 @@ sub getRooster{
 	my $reply;
 	foreach my $vak (@$groepvakken){
 		# Structuur is afhankelijk van de vraag
-		#print Dumper $vak;
 		switch($function){
 			case "GetLeerlingGroepen" {
-				$reply->{'groepvakken'}->{$vak->{'groep'}}->{'groepid'}	=  $vak->{'Lesgroep'};
+				$reply->{$vak->{'groep'}}->{'groepid'}	=  $vak->{'Lesgroep'};
+			}
+			case "GetLeerlingVakken" {
+				#print Dumper $vak;
+				$reply->{$vak->{'Vak'}}	=  'blaat';
 			}
 			case  "GetPersoneelGroepVakken" {
-				$reply->{'groepvakken'}->{$vak->{'Klas'}}->{'vak'} 	=  $vak->{'Vak.Omschrijving'};
-				$reply->{'groepvakken'}->{$vak->{'Klas'}}->{'code'}	=  $vak->{'Vak.Vakcode'};
+				$reply->{$vak->{'Klas'}}->{'vak'} 	=  $vak->{'Vak.Omschrijving'};
+				$reply->{$vak->{'Klas'}}->{'code'}	=  $vak->{'Vak.Vakcode'};
 			}
 		}
 	}
