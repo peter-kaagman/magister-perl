@@ -96,7 +96,8 @@ sub callAPI { # {{{1
 		@header,
 	);	
 	my $result = $ua->request($r);
-	return $result;
+		return $result;
+		print Dumper $result;
 } # }}}
 
 #https://[url]/?library=ADFuncties&function=GetActiveEmpoyees&SessionToken=[SessionToken] &Type=[HTML/XML/CSV/TAB] <= niet langer in gebruik
