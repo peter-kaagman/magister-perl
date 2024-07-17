@@ -63,7 +63,7 @@ foreach my $max (@maxen){
         #print Dumper $docenten;
         $par_aantal_docenten = scalar keys %{$docenten};
 
-        my $pm = Parallel::ForkManager->new($max); # max 20 processen, aardig zijn
+        my $pm = Parallel::ForkManager->new($max);
 
         # Callback
         $pm->run_on_finish( sub{
