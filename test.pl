@@ -63,7 +63,7 @@ foreach my $max (@maxen){
         #print Dumper $docenten;
         $par_aantal_docenten = scalar keys %{$docenten};
 
-        my $pm = Parallel::ForkManager->new($max);
+        my $pm = Parallel::ForkManager->new($max, "$FindBin::Bin/".$config{'CACHE_DIR'}."/");
 
         # Callback
         $pm->run_on_finish( sub{
