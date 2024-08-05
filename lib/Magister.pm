@@ -8,6 +8,7 @@ use LWP::UserAgent;
 use JSON;
 use Data::Dumper;
 use Text::CSV qw( csv );
+use Encode qw(encode decode);
 use Switch;
 
 # Attributes {{{1
@@ -151,13 +152,19 @@ sub getLeerlingen {
 	);
 	my $reply;
 	foreach my $lln (@$leerlingen){
-		#print Dumper $lln;
+		print Dumper $lln;
 		# Fabriceer een UPN, deze kan best ongeldig zijn.
 		my $upn = lc($lln->{'Loginaccount.Naam'}).'@atlascollege.nl';
-		$reply->{$upn}->{'naam'}	= $lln->{'Volledige_naam'};
+		# controlle op de b ervoor
+		if ($upn !~ /^b.+/){$upn = 'b'.$upn; }
+		$reply->{$upn}->{'naam'}	= encode('UTF-8',$lln->{'Volledige_naam'});
+		$reply->{$upn}->{'v_naam'}	= $lln->{'Roepnaam'};
+		$reply->{$upn}->{'tv'}	= $lln->{'Tussenv'};
+		$reply->{$upn}->{'a_naam'}	= $lln->{'Achternaam'};
 		$reply->{$upn}->{'studie'}	= $lln->{'Studie'};
 		$reply->{$upn}->{'stamnr'}	= $lln->{"\x{feff}stamnr_str"};
 		$reply->{$upn}->{'klas'}	= $lln->{'Klas'};
+		$reply->{$upn}->{'locatie'}	= $lln->{'Administratieve_eenheid.Omschrijving'};
 		# Rest van de data wordt nergens gebruikt
 		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'naam'} 		= $lln->{'Volledige_naam'};
 		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'studie'} 	= $lln->{'Studie'};
