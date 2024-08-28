@@ -89,17 +89,17 @@ sub callAPI { # {{{1
 	my $ua = LWP::UserAgent->new(
 		'send_te' => '0',
 	);
-	my @header =	[
+	my $header =	[
 		'Accept'        => '*/*',
-		'User-Agent'    => 'Perl LWP',
+		'Content-Type'  => 'application/json; charset=utf-8 ',
 		];
 	my $r  = HTTP::Request->new(
 		GET => $url,
-		@header,
+		$header,
 	);	
 	my $result = $ua->request($r);
 		return $result;
-		print Dumper $result;
+		#print Dumper $result;
 } # }}}
 
 #https://[url]/?library=ADFuncties&function=GetActiveEmpoyees&SessionToken=[SessionToken] &Type=[HTML/XML/CSV/TAB] <= niet langer in gebruik
