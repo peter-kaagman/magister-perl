@@ -47,6 +47,29 @@ has 'lesperiode' => ( # {{{2
 	reader => '_get_lesperiode',
 	writer => '_set_lesperiode',
 ); #}}}
+has 'maxretry' => ( # {{{2
+	is => 'ro', 
+	isa => 'Str', 
+	required => '1',
+	default => '4',
+	reader => '_get_maxretry',
+	writer => '_set_maxretry',
+); #}}}
+has 'lasterror' => ( # {{{2
+	is => 'ro', 
+	isa => 'Str', 
+	required => '0',
+	default => '0',
+	reader => '_get_errorstate',
+	writer => '_set_errorstate',
+); #}}}
+has 'lastresult' => ( # {{{2
+	is => 'ro', 
+	isa => 'Str', 
+	required => '0',
+	reader => '_get_lastresult',
+	writer => '_set_lastresult',
+); #}}}
 # }}}
 
 
@@ -84,8 +107,9 @@ sub BUILD{ #	{{{1
 }#	}}}
 
 sub callAPI { # {{{1
-	#my $self = shift;
+	my $self = shift;
 	my $url = shift;
+	#print Dumper $self; exit 1;
 	my $ua = LWP::UserAgent->new(
 		'send_te' => '0',
 	);
@@ -97,9 +121,25 @@ sub callAPI { # {{{1
 		GET => $url,
 		$header,
 	);	
-	my $result = $ua->request($r);
-		return $result;
-		#print Dumper $result;
+
+	my $try = 0;
+	my $result;
+	while ($try lt $self->_get_maxretry){
+		$try++;
+		print ".";
+		#say "$try => $url";
+		$result = $ua->request($r);
+		if (! $result->is_success){
+			say "try $try: $result->{'_rc'} $url ". $result->content;
+		}
+		last if $result->is_success;
+	}
+	if (! $result->is_success){
+		$self->_set_errorstate($result->{'_rc'});
+		$self->_set_lastresult($result->content);
+	}
+	return $result;
+	#print Dumper $result;
 } # }}}
 
 #https://[url]/?library=ADFuncties&function=GetActiveEmpoyees&SessionToken=[SessionToken] &Type=[HTML/XML/CSV/TAB] <= niet langer in gebruik
@@ -113,7 +153,7 @@ sub getDocenten {
 	my $url = $self->_get_endpoint;
 	#$url .= "/?library=ADFuncties&function=GetActiveEmpoyees&Type=CSV&SessionToken=".$self->_get_access_token;
 	$url .= "/?library=Data&function=GetData&Layout=SDS-Medewerker&Type=CSV&SessionToken=".$self->_get_access_token;
-	my $result = callAPI($url);
+	my $result = callAPI($self,$url);
 	if ($result->is_success){
 		my $docenten = csv(
 			in => \$result->content,
@@ -145,7 +185,7 @@ sub getLeerlingen {
 
 	$url .= "/?library=ADFuncties&function=GetActiveStudents&Type=CSV&SessionToken=".$self->_get_access_token;
 	$url .= "&LesPeriode=".$self->_get_lesperiode;
-	my $result = callAPI($url);
+	my $result = callAPI($self,$url);
 	my $leerlingen = csv(
 		in => \$result->content,
 		headers => "auto",
@@ -195,7 +235,9 @@ sub getRooster{
 	$url .= "&Type=CSV&SessionToken=".$self->_get_access_token;
 	$url .= "&LesPeriode=".$self->_get_lesperiode;
 	$url .= "&StamNr=".$stamnr;
-	my $result = callAPI($url);
+
+	my $result = callAPI($self,$url);
+
 	my $groepvakken = csv(
 		in => \$result->content,
 		headers => "auto",
