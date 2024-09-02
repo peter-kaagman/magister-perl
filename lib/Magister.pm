@@ -126,13 +126,20 @@ sub callAPI { # {{{1
 	my $result;
 	while ($try lt $self->_get_maxretry){
 		$try++;
-		print ".";
+		#print ".";
 		#say "$try => $url";
 		$result = $ua->request($r);
 		if (! $result->is_success){
 			say "try $try: $result->{'_rc'} $url ". $result->content;
 		}
-		last if $result->is_success;
+		# Last if succes
+		# or 404: not found (no retry needed)
+		if (
+				($result->is_success) ||
+				($result->{'_rc'} eq 404)
+		){
+			last;
+		}
 	}
 	if (! $result->is_success){
 		$self->_set_errorstate($result->{'_rc'});
@@ -235,7 +242,6 @@ sub getRooster{
 	$url .= "&Type=CSV&SessionToken=".$self->_get_access_token;
 	$url .= "&LesPeriode=".$self->_get_lesperiode;
 	$url .= "&StamNr=".$stamnr;
-
 	my $result = callAPI($self,$url);
 
 	my $groepvakken = csv(
@@ -256,8 +262,9 @@ sub getRooster{
 				$reply->{$vak->{'Vak'}}	=  'blaat';
 			}
 			case  "GetPersoneelGroepVakken" {
-				$reply->{$vak->{'Klas'}}->{'vak'} 	=  $vak->{'Vak.Omschrijving'};
-				$reply->{$vak->{'Klas'}}->{'code'}	=  $vak->{'Vak.Vakcode'};
+				$reply->{ $vak->{'Klas'}.'_'.$vak->{'Vak.Vakcode'}}->{'vak'} 	=  $vak->{'Vak.Omschrijving'};
+				$reply->{ $vak->{'Klas'}.'_'.$vak->{'Vak.Vakcode'}}->{'code'}	=  $vak->{'Vak.Vakcode'};
+				$reply->{ $vak->{'Klas'}.'_'.$vak->{'Vak.Vakcode'}}->{'klas'}	=  $vak->{'Klas'};
 			}
 		}
 	}
