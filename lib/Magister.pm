@@ -126,12 +126,7 @@ sub callAPI { # {{{1
 	my $result;
 	while ($try lt $self->_get_maxretry){
 		$try++;
-		#print ".";
-		#say "$try => $url";
 		$result = $ua->request($r);
-		if (! $result->is_success){
-			say "try $try: $result->{'_rc'} $url ". $result->content;
-		}
 		# Last if succes
 		# or 404: not found (no retry needed)
 		if (
@@ -142,6 +137,7 @@ sub callAPI { # {{{1
 		}
 	}
 	if (! $result->is_success){
+		say "try $try: $result->{'_rc'} $url ". $result->content unless ($result->{'_rc'} eq 404);
 		$self->_set_errorstate($result->{'_rc'});
 		$self->_set_lastresult($result->content);
 	}
