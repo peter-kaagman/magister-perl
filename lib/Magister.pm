@@ -212,7 +212,9 @@ sub getLeerlingen {
 		$reply->{$upn}->{'klas'}	= $lln->{'Klas'};
 		$lln->{'Studie'} =~ /^([0-9]).*/;
 		$reply->{$upn}->{'locatie_index'}	= $1;
-		# $reply->{$upn}->{'_locatie'}	= $lln->{'Administratieve_eenheid.Omschrijving'}; #locatie is onbetrouwbaar alleen geldig als er ook een klas is
+		
+		
+		$reply->{$upn}->{'_locatie'}	= $lln->{'Administratieve_eenheid.Omschrijving'}; #locatie is onbetrouwbaar alleen geldig als er ook een klas is
 		# Rest van de data wordt nergens gebruikt
 		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'naam'} 		= $lln->{'Volledige_naam'};
 		#$reply->{$lln->{"\x{feff}stamnr_str"}}->{'studie'} 	= $lln->{'Studie'};
