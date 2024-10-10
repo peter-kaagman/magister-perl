@@ -126,6 +126,7 @@ sub callAPI { # {{{1
 	my $result;
 	while ($try lt $self->_get_maxretry){
 		$try++;
+		say "Try $try: $url";
 		$result = $ua->request($r);
 		# Last if succes
 		# or 404: not found (no retry needed)
@@ -134,6 +135,11 @@ sub callAPI { # {{{1
 				($result->{'_rc'} eq 404)
 		){
 			last;
+		}else{
+			say "try $try: $result->{'_rc'} $url ". $result->content unless ($result->{'_rc'} eq 404);
+			say "sleeping";
+			sleep 30;
+			say 'volgende poging';
 		}
 	}
 	if (! $result->is_success){
@@ -268,6 +274,46 @@ sub getRooster{
 	}
 	return $reply;
 }
+
+sub getLayout {
+	my $self = shift;
+	my $layout = shift;
+	my $variables = shift; 
+	exit 1 unless $layout;
+
+    my @parameters;
+	push(@parameters, 'library=Data');
+	push(@parameters, 'function=GetData');
+    push(@parameters,"layout=$layout") if ($layout);
+    push(@parameters,"parameters=$variables") if ($variables);
+	push(@parameters, 'SessionToken='.$self->_get_access_token);
+	push(@parameters, 'type=CSV');
+	push(@parameters, 'Encoding=UTF-8#Operation_Data_GetData');
+
+
+    my $url = $self->_get_endpoint . "/?". join( '&', @parameters);
+
+
+
+	#my $url = $self->_get_endpoint;
+	#$url .= "/?library=ADFuncties&function=GetActiveEmpoyees&Type=CSV&SessionToken=".$self->_get_access_token;
+	#$url .= "/?library=Data&function=GetData&Layout=$layout&SessionToken=".$self->_get_access_token. "&Type=CSV&Encoding=UTF-8#Operation_Data_GetData";
+	say $url;
+	my $result = callAPI($self,$url);
+	#print Dumper $result;
+	if ($result->is_success){
+		my $rows = csv(
+			in => \$result->content,
+			headers => "auto",
+			sep_char => ";",
+			encoding => "UTF-8"
+		);
+		return $rows;
+	}else{
+		print Dumper $result;
+	}
+}
+
 
 
 __PACKAGE__->meta->make_immutable;
