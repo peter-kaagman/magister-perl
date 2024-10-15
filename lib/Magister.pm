@@ -126,7 +126,7 @@ sub callAPI { # {{{1
 	my $result;
 	while ($try lt $self->_get_maxretry){
 		$try++;
-		say "Try $try: $url";
+		#say "Try $try: $url";
 		$result = $ua->request($r);
 		# Last if succes
 		# or 404: not found (no retry needed)
