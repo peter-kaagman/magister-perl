@@ -298,7 +298,7 @@ sub getLayout {
 	#my $url = $self->_get_endpoint;
 	#$url .= "/?library=ADFuncties&function=GetActiveEmpoyees&Type=CSV&SessionToken=".$self->_get_access_token;
 	#$url .= "/?library=Data&function=GetData&Layout=$layout&SessionToken=".$self->_get_access_token. "&Type=CSV&Encoding=UTF-8#Operation_Data_GetData";
-	say $url;
+	#say $url;
 	my $result = callAPI($self,$url);
 	#print Dumper $result;
 	if ($result->is_success){
